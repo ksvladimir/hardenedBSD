@@ -102,9 +102,7 @@ struct sysentvec aout_sysvec = {
 	.sv_fetch_syscall_args = cpu_fetch_syscall_args,
 	.sv_syscallnames = syscallnames,
 	.sv_schedtail	= NULL,
-#ifdef PAX_ASLR
 	.sv_pax_aslr_init = pax_aslr_init_vmspace,
-#endif
 };
 
 #elif defined(__amd64__)
@@ -149,9 +147,7 @@ struct sysentvec aout_sysvec = {
 	.sv_set_syscall_retval = ia32_set_syscall_retval,
 	.sv_fetch_syscall_args = ia32_fetch_syscall_args,
 	.sv_syscallnames = freebsd32_syscallnames,
-#ifdef PAX_ASLR
 	.sv_pax_aslr_init = pax_aslr_init_vmspace32,
-#endif
 };
 #else
 #error "Port me"

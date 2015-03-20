@@ -92,9 +92,7 @@ struct sysentvec ibcs2_svr3_sysvec = {
 	.sv_fetch_syscall_args = cpu_fetch_syscall_args,
 	.sv_syscallnames = NULL,
 	.sv_schedtail	= NULL,
-#ifdef PAX_ASLR
 	.sv_pax_aslr_init = pax_aslr_init_vmspace,
-#endif
 };
 
 static int

@@ -87,8 +87,23 @@ void pax_init_prison(struct prison *pr);
  * ASLR related functions
  */
 int pax_aslr_active(struct proc *p);
+
+#ifdef PAX_ASLR
 void pax_aslr_init_vmspace(struct proc *p);
 void pax_aslr_init_vmspace32(struct proc *p);
+#else
+static inline void
+pax_aslr_init_vmspace(struct proc *p)
+{
+	return;
+}
+
+static inline void
+pax_aslr_init_vmspace32(struct proc *p)
+{
+	return;
+}
+#endif
 #ifdef PAX_ASLR
 void pax_aslr_init_prison(struct prison *pr);
 void pax_aslr_init_prison32(struct prison *pr);

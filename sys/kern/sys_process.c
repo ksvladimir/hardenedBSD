@@ -653,9 +653,7 @@ kern_ptrace(struct thread *td, int req, pid_t pid, void *addr, int data)
 
 	/* Lock proctree before locking the process. */
 	switch (req) {
-#ifdef PAX_ASLR
 	case PT_PAX:
-#endif
 	case PT_TRACE_ME:
 	case PT_ATTACH:
 	case PT_STEP:
