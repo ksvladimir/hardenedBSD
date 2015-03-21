@@ -50,6 +50,7 @@ struct hardening_features {
 #endif
 
 #ifdef _KERNEL
+#ifdef PAX_ASLR
 struct image_params;
 struct prison;
 struct thread;
@@ -88,20 +89,10 @@ void pax_init_prison(struct prison *pr);
  */
 int pax_aslr_active(struct proc *p);
 
-#ifdef PAX_ASLR
 void pax_aslr_init_vmspace(struct proc *p);
 void pax_aslr_init_vmspace32(struct proc *p);
-#else
-#define pax_aslr_init_vmspace	NULL
-#define pax_aslr_init_vmspace32	NULL
-#endif
-#ifdef PAX_ASLR
 void pax_aslr_init_prison(struct prison *pr);
 void pax_aslr_init_prison32(struct prison *pr);
-#else
-#define	pax_aslr_init_prison(pr)	do {} while (0)
-#define	pax_aslr_init_prison32(pr)	do {} while (0)
-#endif
 void pax_aslr_init(struct image_params *imgp);
 void pax_aslr_execbase(struct proc *p, u_long *et_dyn_addr);
 void pax_aslr_mmap(struct proc *p, vm_offset_t *addr,
@@ -109,10 +100,18 @@ void pax_aslr_mmap(struct proc *p, vm_offset_t *addr,
 uint32_t pax_aslr_setup_flags(struct image_params *imgp, uint32_t mode);
 void pax_aslr_stack(struct proc *p, uintptr_t *addr);
 void pax_aslr_stack_fixup(struct proc *p);
-#endif /* _KERNEL */
+
+#else /* PAX_ASLR */
+
+#define pax_aslr_init_vmspace	NULL
+#define pax_aslr_init_vmspace32	NULL
+#define	pax_aslr_init_prison(pr)	do {} while (0)
+#define	pax_aslr_init_prison32(pr)	do {} while (0)
+
+#endif /* PAX_ASLR */
 
 /*
- * keep this values, to keep compatibility with HardenedBSD
+ * Keep these values to keep compatibility with HardenedBSD
  */
 #define	PAX_NOTE_ASLR		0x00000040
 #define	PAX_NOTE_NOASLR		0x00000080
@@ -120,5 +119,7 @@ void pax_aslr_stack_fixup(struct proc *p);
 #define	PAX_NOTE_ALL_ENABLED	(PAX_NOTE_ASLR)
 #define	PAX_NOTE_ALL_DISABLED	(PAX_NOTE_NOASLR)
 #define	PAX_NOTE_ALL	(PAX_NOTE_ALL_ENABLED | PAX_NOTE_ALL_DISABLED)
+
+#endif /* _KERNEL */
 
 #endif /* __SYS_PAX_H */
