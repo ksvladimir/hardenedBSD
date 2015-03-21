@@ -92,9 +92,9 @@ int pax_aslr_active(struct proc *p);
 void pax_aslr_init_vmspace(struct proc *p);
 void pax_aslr_init_vmspace32(struct proc *p);
 #else
-#endif
 #define pax_aslr_init_vmspace	NULL
 #define pax_aslr_init_vmspace32	NULL
+#endif
 #ifdef PAX_ASLR
 void pax_aslr_init_prison(struct prison *pr);
 void pax_aslr_init_prison32(struct prison *pr);
