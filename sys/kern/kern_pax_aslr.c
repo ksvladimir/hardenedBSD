@@ -32,7 +32,6 @@
  * HardenedBSD-version: v16
  *
  */
-
 #include <sys/cdefs.h>
 __FBSDID("$FreeBSD$");
 
@@ -56,16 +55,13 @@ __FBSDID("$FreeBSD$");
 #include <sys/queue.h>
 #include <sys/libkern.h>
 #include <sys/jail.h>
-
 #include <sys/mman.h>
 #include <sys/libkern.h>
 #include <sys/exec.h>
 #include <sys/kthread.h>
-
 #include <vm/pmap.h>
 #include <vm/vm_map.h>
 #include <vm/vm_extern.h>
-
 #include <machine/elf.h>
 
 #ifndef PAX_ASLR_DELTA
@@ -73,7 +69,7 @@ __FBSDID("$FreeBSD$");
 	(((delta) & ((1UL << (len)) - 1)) << (lsb))
 #endif /* PAX_ASLR_DELTA */
 
-/*
+/*-
  * generic ASLR values
  *
  *  	MMAP	| 32 bit | 64 bit | compat |
@@ -241,7 +237,6 @@ static int sysctl_pax_aslr_mmap(SYSCTL_HANDLER_ARGS);
 static int sysctl_pax_aslr_stack(SYSCTL_HANDLER_ARGS);
 static int sysctl_pax_aslr_exec(SYSCTL_HANDLER_ARGS);
 
-
 SYSCTL_NODE(_security_pax, OID_AUTO, aslr, CTLFLAG_RD, 0,
     "Address Space Layout Randomization.");
 
@@ -279,12 +274,10 @@ sysctl_pax_aslr_status(SYSCTL_HANDLER_ARGS)
 	int err, val;
 
 	pr = pax_get_prison_td(req->td);
-
-	val = pr->pr_hardening.hr_pax_aslr_status;
+	val = pr->pr_hardening.hf_pax_aslr_status;
 	err = sysctl_handle_int(oidp, &val, sizeof(int), req);
 	if (err || (req->newptr == NULL))
 		return (err);
-
 	switch (val) {
 	case PAX_FEATURE_DISABLED:
 	case PAX_FEATURE_OPTIN:
@@ -292,13 +285,12 @@ sysctl_pax_aslr_status(SYSCTL_HANDLER_ARGS)
 	case PAX_FEATURE_FORCE_ENABLED:
 		if (pr == &prison0)
 			pax_aslr_status = val;
-
-		pr->pr_hardening.hr_pax_aslr_status = val;
+		pr->pr_hardening.hf_pax_aslr_status = val;
 		break;
+
 	default:
 		return (EINVAL);
 	}
-
 	return (0);
 }
 
@@ -309,21 +301,16 @@ sysctl_pax_aslr_mmap(SYSCTL_HANDLER_ARGS)
 	int err, val;
 
 	pr = pax_get_prison_td(req->td);
-
-	val = pr->pr_hardening.hr_pax_aslr_mmap_len;
+	val = pr->pr_hardening.hf_pax_aslr_mmap_len;
 	err = sysctl_handle_int(oidp, &val, sizeof(int), req);
 	if (err || !req->newptr)
 		return (err);
-
 	if (val < PAX_ASLR_DELTA_MMAP_MIN_LEN ||
 	    val > PAX_ASLR_DELTA_MMAP_MAX_LEN)
 		return (EINVAL);
-
 	if (pr == &prison0)
 		pax_aslr_mmap_len = val;
-
-	pr->pr_hardening.hr_pax_aslr_mmap_len = val;
-
+	pr->pr_hardening.hf_pax_aslr_mmap_len = val;
 	return (0);
 }
 
@@ -334,21 +321,16 @@ sysctl_pax_aslr_stack(SYSCTL_HANDLER_ARGS)
 	int err, val;
 
 	pr = pax_get_prison_td(req->td);
-
-	val = pr->pr_hardening.hr_pax_aslr_stack_len;
+	val = pr->pr_hardening.hf_pax_aslr_stack_len;
 	err = sysctl_handle_int(oidp, &val, sizeof(int), req);
 	if (err || !req->newptr)
 		return (err);
-
 	if (val < PAX_ASLR_DELTA_STACK_MIN_LEN ||
 	    val > PAX_ASLR_DELTA_STACK_MAX_LEN)
 		return (EINVAL);
-
 	if (pr == &prison0)
 		pax_aslr_stack_len = val;
-
-	pr->pr_hardening.hr_pax_aslr_stack_len = val;
-
+	pr->pr_hardening.hf_pax_aslr_stack_len = val;
 	return (0);
 }
 
@@ -359,21 +341,16 @@ sysctl_pax_aslr_exec(SYSCTL_HANDLER_ARGS)
 	int err, val;
 
 	pr = pax_get_prison_td(req->td);
-
-	val = pr->pr_hardening.hr_pax_aslr_exec_len;
+	val = pr->pr_hardening.hf_pax_aslr_exec_len;
 	err = sysctl_handle_int(oidp, &val, sizeof(int), req);
 	if (err || (req->newptr == NULL))
 		return (err);
-
 	if (val < PAX_ASLR_DELTA_EXEC_MIN_LEN ||
 	    val > PAX_ASLR_DELTA_EXEC_MAX_LEN)
 		return (EINVAL);
-
 	if (pr == &prison0)
 		pax_aslr_exec_len = val;
-
-	pr->pr_hardening.hr_pax_aslr_exec_len = val;
-
+	pr->pr_hardening.hf_pax_aslr_exec_len = val;
 	return (0);
 }
 
@@ -421,12 +398,10 @@ sysctl_pax_aslr_compat_status(SYSCTL_HANDLER_ARGS)
 	int err, val;
 
 	pr = pax_get_prison_td(req->td);
-
-	val = pr->pr_hardening.hr_pax_aslr_compat_status;
+	val = pr->pr_hardening.hf_pax_aslr_compat_status;
 	err = sysctl_handle_int(oidp, &val, sizeof(int), req);
 	if (err || (req->newptr == NULL))
 		return (err);
-
 	switch (val) {
 	case PAX_FEATURE_DISABLED:
 	case PAX_FEATURE_OPTIN:
@@ -434,13 +409,12 @@ sysctl_pax_aslr_compat_status(SYSCTL_HANDLER_ARGS)
 	case PAX_FEATURE_FORCE_ENABLED:
 		if (pr == &prison0)
 			pax_aslr_compat_status = val;
-
-		pr->pr_hardening.hr_pax_aslr_compat_status = val;
+		pr->pr_hardening.hf_pax_aslr_compat_status = val;
 		break;
+
 	default:
 		return (EINVAL);
 	}
-
 	return (0);
 }
 
@@ -451,21 +425,16 @@ sysctl_pax_aslr_compat_mmap(SYSCTL_HANDLER_ARGS)
 	int err, val;
 
 	pr = pax_get_prison_td(req->td);
-
-	val = pr->pr_hardening.hr_pax_aslr_compat_mmap_len;
+	val = pr->pr_hardening.hf_pax_aslr_compat_mmap_len;
 	err = sysctl_handle_int(oidp, &val, sizeof(int), req);
 	if (err || !req->newptr)
 		return (err);
-
 	if (val < PAX_ASLR_COMPAT_DELTA_MMAP_MIN_LEN ||
 	    val > PAX_ASLR_COMPAT_DELTA_MMAP_MAX_LEN)
 		return (EINVAL);
-
 	if (pr == &prison0)
 		pax_aslr_compat_mmap_len = val;
-
-	pr->pr_hardening.hr_pax_aslr_compat_mmap_len = val;
-
+	pr->pr_hardening.hf_pax_aslr_compat_mmap_len = val;
 	return (0);
 }
 
@@ -476,21 +445,16 @@ sysctl_pax_aslr_compat_stack(SYSCTL_HANDLER_ARGS)
 	int err, val;
 
 	pr = pax_get_prison_td(req->td);
-
-	val = pr->pr_hardening.hr_pax_aslr_compat_stack_len;
+	val = pr->pr_hardening.hf_pax_aslr_compat_stack_len;
 	err = sysctl_handle_int(oidp, &val, sizeof(int), req);
 	if (err || !req->newptr)
 		return (err);
-
 	if (val < PAX_ASLR_COMPAT_DELTA_STACK_MIN_LEN ||
 	    val > PAX_ASLR_COMPAT_DELTA_STACK_MAX_LEN)
 		return (EINVAL);
-
 	if (pr == &prison0)
 		pax_aslr_compat_stack_len = val;
-
-	pr->pr_hardening.hr_pax_aslr_compat_stack_len = val;
-
+	pr->pr_hardening.hf_pax_aslr_compat_stack_len = val;
 	return (0);
 }
 
@@ -502,20 +466,16 @@ sysctl_pax_aslr_compat_exec(SYSCTL_HANDLER_ARGS)
 
 	pr = pax_get_prison_td(req->td);
 
-	val = pr->pr_hardening.hr_pax_aslr_compat_exec_len;
+	val = pr->pr_hardening.hf_pax_aslr_compat_exec_len;
 	err = sysctl_handle_int(oidp, &val, sizeof(int), req);
 	if (err || !req->newptr)
 		return (err);
-
 	if (val < PAX_ASLR_COMPAT_DELTA_EXEC_MIN_LEN ||
 	    val > PAX_ASLR_COMPAT_DELTA_EXEC_MAX_LEN)
 		return (EINVAL);
-
 	if (pr == &prison0)
 		pax_aslr_compat_exec_len = val;
-
-	pr->pr_hardening.hr_pax_aslr_compat_exec_len = val;
-
+	pr->pr_hardening.hf_pax_aslr_compat_exec_len = val;
 	return (0);
 }
 
@@ -537,6 +497,7 @@ pax_aslr_sysinit(void)
 	case PAX_FEATURE_OPTOUT:
 	case PAX_FEATURE_FORCE_ENABLED:
 		break;
+
 	default:
 		printf("warning: invalid settings in loader.conf:"
 		    " (pax_aslr_status = %d)\n", pax_aslr_status);
@@ -558,17 +519,13 @@ pax_aslr_active(struct proc *p)
 	uint32_t flags;
 
 	pax_get_flags(p, &flags);
-
 	CTR3(KTR_PAX, "%s: pid = %d p_pax = %x",
 	    __func__, p->p_pid, flags);
-
 	if ((flags & PAX_NOTE_ASLR) == PAX_NOTE_ASLR)
-		return (true);
-
+		return (1);
 	if ((flags & PAX_NOTE_NOASLR) == PAX_NOTE_NOASLR)
-		return (false);
-
-	return (true);
+		return (0);
+	return (1);
 }
 
 void
@@ -579,24 +536,20 @@ pax_aslr_init_vmspace(struct proc *p)
 	unsigned long rand_buf;
 
 	vm = p->p_vmspace;
-
 	pr = pax_get_prison(p);
 	arc4rand(&rand_buf, sizeof(rand_buf), 0);
 	vm->vm_aslr_delta_mmap = PAX_ASLR_DELTA(rand_buf,
 	    PAX_ASLR_DELTA_MMAP_LSB,
-	    pr->pr_hardening.hr_pax_aslr_mmap_len);
-
+	    pr->pr_hardening.hf_pax_aslr_mmap_len);
 	arc4rand(&rand_buf, sizeof(rand_buf), 0);
 	vm->vm_aslr_delta_stack = PAX_ASLR_DELTA(rand_buf,
 	    PAX_ASLR_DELTA_STACK_LSB,
-	    pr->pr_hardening.hr_pax_aslr_stack_len);
+	    pr->pr_hardening.hf_pax_aslr_stack_len);
 	vm->vm_aslr_delta_stack = ALIGN(vm->vm_aslr_delta_stack);
-
 	arc4rand(&rand_buf, sizeof(rand_buf), 0);
 	vm->vm_aslr_delta_exec = PAX_ASLR_DELTA(rand_buf,
 	    PAX_ASLR_DELTA_EXEC_LSB,
-	    pr->pr_hardening.hr_pax_aslr_exec_len);
-
+	    pr->pr_hardening.hf_pax_aslr_exec_len);
 	CTR2(KTR_PAX, "%s: vm_aslr_delta_mmap=%p\n",
 	    __func__, (void *)vm->vm_aslr_delta_mmap);
 	CTR2(KTR_PAX, "%s: vm_aslr_delta_stack=%p\n",
@@ -616,6 +569,7 @@ pax_compat_aslr_sysinit(void)
 	case PAX_FEATURE_OPTOUT:
 	case PAX_FEATURE_FORCE_ENABLED:
 		break;
+
 	default:
 		printf("warning: invalid settings in loader.conf! "
 		    "(pax_aslr_compat_status = %d)\n", pax_aslr_compat_status);
@@ -639,24 +593,20 @@ pax_aslr_init_vmspace32(struct proc *p)
 	long rand_buf;
 
 	vm = p->p_vmspace;
-
 	pr = pax_get_prison(p);
 	arc4rand(&rand_buf, sizeof(rand_buf), 0);
 	vm->vm_aslr_delta_mmap = PAX_ASLR_DELTA(rand_buf,
 	    PAX_ASLR_COMPAT_DELTA_MMAP_LSB,
-	    pr->pr_hardening.hr_pax_aslr_compat_mmap_len);
-
+	    pr->pr_hardening.hf_pax_aslr_compat_mmap_len);
 	arc4rand(&rand_buf, sizeof(rand_buf), 0);
 	vm->vm_aslr_delta_stack = PAX_ASLR_DELTA(rand_buf,
 	    PAX_ASLR_COMPAT_DELTA_STACK_LSB,
-	    pr->pr_hardening.hr_pax_aslr_compat_stack_len);
+	    pr->pr_hardening.hf_pax_aslr_compat_stack_len);
 	vm->vm_aslr_delta_stack = ALIGN(vm->vm_aslr_delta_stack);
-
 	arc4rand(&rand_buf, sizeof(rand_buf), 0);
 	vm->vm_aslr_delta_exec = PAX_ASLR_DELTA(rand_buf,
 	    PAX_ASLR_COMPAT_DELTA_EXEC_LSB,
-	    pr->pr_hardening.hr_pax_aslr_compat_exec_len);
-
+	    pr->pr_hardening.hf_pax_aslr_compat_exec_len);
 	CTR2(KTR_PAX, "%s: vm_aslr_delta_mmap=%p\n",
 	    __func__, (void *)vm->vm_aslr_delta_mmap);
 	CTR2(KTR_PAX, "%s: vm_aslr_delta_stack=%p\n",
@@ -672,10 +622,8 @@ pax_aslr_init(struct image_params *imgp)
 	struct proc *p;
 
 	p = imgp->proc;
-
 	if (!pax_aslr_active(p))
 		return;
-
 	if (imgp->sysent->sv_pax_aslr_init != NULL)
 		imgp->sysent->sv_pax_aslr_init(p);
 }
@@ -687,29 +635,27 @@ pax_aslr_init_prison(struct prison *pr)
 
 	CTR2(KTR_PAX, "%s: Setting prison %s PaX variables\n",
 	    __func__, pr->pr_name);
-
 	if (pr == &prison0) {
 		/* prison0 has no parent, use globals */
-		pr->pr_hardening.hr_pax_aslr_status = pax_aslr_status;
-		pr->pr_hardening.hr_pax_aslr_mmap_len =
+		pr->pr_hardening.hf_pax_aslr_status = pax_aslr_status;
+		pr->pr_hardening.hf_pax_aslr_mmap_len =
 		    pax_aslr_mmap_len;
-		pr->pr_hardening.hr_pax_aslr_stack_len =
+		pr->pr_hardening.hf_pax_aslr_stack_len =
 		    pax_aslr_stack_len;
-		pr->pr_hardening.hr_pax_aslr_exec_len =
+		pr->pr_hardening.hf_pax_aslr_exec_len =
 		    pax_aslr_exec_len;
 	} else {
 		KASSERT(pr->pr_parent != NULL,
 		   ("%s: pr->pr_parent == NULL", __func__));
 		pr_p = pr->pr_parent;
-
-		pr->pr_hardening.hr_pax_aslr_status =
-		    pr_p->pr_hardening.hr_pax_aslr_status;
-		pr->pr_hardening.hr_pax_aslr_mmap_len =
-		    pr_p->pr_hardening.hr_pax_aslr_mmap_len;
-		pr->pr_hardening.hr_pax_aslr_stack_len =
-		    pr_p->pr_hardening.hr_pax_aslr_stack_len;
-		pr->pr_hardening.hr_pax_aslr_exec_len =
-		    pr_p->pr_hardening.hr_pax_aslr_exec_len;
+		pr->pr_hardening.hf_pax_aslr_status =
+		    pr_p->pr_hardening.hf_pax_aslr_status;
+		pr->pr_hardening.hf_pax_aslr_mmap_len =
+		    pr_p->pr_hardening.hf_pax_aslr_mmap_len;
+		pr->pr_hardening.hf_pax_aslr_stack_len =
+		    pr_p->pr_hardening.hf_pax_aslr_stack_len;
+		pr->pr_hardening.hf_pax_aslr_exec_len =
+		    pr_p->pr_hardening.hf_pax_aslr_exec_len;
 	}
 }
 
@@ -721,31 +667,29 @@ pax_aslr_init_prison32(struct prison *pr)
 
 	CTR2(KTR_PAX, "%s: Setting prison %s PaX variables\n",
 	    __func__, pr->pr_name);
-
 	if (pr == &prison0) {
-		/* prison0 has no parent, use globals */
+		/* prison0 has no parent, use globals. */
 
-		pr->pr_hardening.hr_pax_aslr_compat_status =
+		pr->pr_hardening.hf_pax_aslr_compat_status =
 		    pax_aslr_compat_status;
-		pr->pr_hardening.hr_pax_aslr_compat_mmap_len =
+		pr->pr_hardening.hf_pax_aslr_compat_mmap_len =
 		    pax_aslr_compat_mmap_len;
-		pr->pr_hardening.hr_pax_aslr_compat_stack_len =
+		pr->pr_hardening.hf_pax_aslr_compat_stack_len =
 		    pax_aslr_compat_stack_len;
-		pr->pr_hardening.hr_pax_aslr_compat_exec_len =
+		pr->pr_hardening.hf_pax_aslr_compat_exec_len =
 		    pax_aslr_compat_exec_len;
 	} else {
 		KASSERT(pr->pr_parent != NULL,
 		   ("%s: pr->pr_parent == NULL", __func__));
 		pr_p = pr->pr_parent;
-
-		pr->pr_hardening.hr_pax_aslr_compat_status =
-		    pr_p->pr_hardening.hr_pax_aslr_compat_status;
-		pr->pr_hardening.hr_pax_aslr_compat_mmap_len =
-		    pr_p->pr_hardening.hr_pax_aslr_compat_mmap_len;
-		pr->pr_hardening.hr_pax_aslr_compat_stack_len =
-		    pr_p->pr_hardening.hr_pax_aslr_compat_stack_len;
-		pr->pr_hardening.hr_pax_aslr_compat_exec_len =
-		    pr_p->pr_hardening.hr_pax_aslr_compat_exec_len;
+		pr->pr_hardening.hf_pax_aslr_compat_status =
+		    pr_p->pr_hardening.hf_pax_aslr_compat_status;
+		pr->pr_hardening.hf_pax_aslr_compat_mmap_len =
+		    pr_p->pr_hardening.hf_pax_aslr_compat_mmap_len;
+		pr->pr_hardening.hf_pax_aslr_compat_stack_len =
+		    pr_p->pr_hardening.hf_pax_aslr_compat_stack_len;
+		pr->pr_hardening.hf_pax_aslr_compat_exec_len =
+		    pr_p->pr_hardening.hf_pax_aslr_compat_exec_len;
 	}
 }
 #endif /* COMPAT_FREEBSD32 */
@@ -756,11 +700,9 @@ pax_aslr_mmap(struct proc *p, vm_offset_t *addr, vm_offset_t orig_addr, int flag
 
 	if (!pax_aslr_active(p))
 		return;
-
 	if (!(flags & MAP_FIXED) && ((orig_addr == 0) || !(flags & MAP_ANON))) {
 		CTR4(KTR_PAX, "%s: applying to %p orig_addr=%p flags=%x\n",
 		    __func__, (void *)*addr, (void *)orig_addr, flags);
-
 #ifdef MAP_32BIT
 		if (flags & MAP_32BIT) {
 			int len_32bit;
@@ -789,7 +731,6 @@ pax_aslr_stack(struct proc *p, uintptr_t *addr)
 
 	if (!pax_aslr_active(p))
 		return;
-
 	orig_addr = *addr;
 	*addr -= p->p_vmspace->vm_aslr_delta_stack;
 	CTR3(KTR_PAX, "%s: orig_addr=%p, new_addr=%p\n",
@@ -802,7 +743,6 @@ pax_aslr_stack_fixup(struct proc *p)
 
 	if (!pax_aslr_active(p))
 		return;
-
 	p->p_vmspace->vm_maxsaddr -= p->p_vmspace->vm_aslr_delta_stack;
 }
 
@@ -824,24 +764,20 @@ pax_aslr_setup_flags(struct image_params *imgp, uint32_t mode)
 
 	flags = 0;
 	status = 0;
-
 	pr = pax_get_prison(imgp->proc);
-	status = pr->pr_hardening.hr_pax_aslr_status;
-
+	status = pr->pr_hardening.hf_pax_aslr_status;
 	if (status == PAX_FEATURE_DISABLED) {
 		flags &= ~PAX_NOTE_ASLR;
 		flags |= PAX_NOTE_NOASLR;
 
 		return (flags);
 	}
-
 	if (status == PAX_FEATURE_FORCE_ENABLED) {
 		flags |= PAX_NOTE_ASLR;
 		flags &= ~PAX_NOTE_NOASLR;
 
 		return (flags);
 	}
-
 	if (status == PAX_FEATURE_OPTIN) {
 		if (mode & PAX_NOTE_ASLR) {
 			flags |= PAX_NOTE_ASLR;
@@ -850,7 +786,6 @@ pax_aslr_setup_flags(struct image_params *imgp, uint32_t mode)
 			flags &= ~PAX_NOTE_ASLR;
 			flags |= PAX_NOTE_NOASLR;
 		}
-
 		return (flags);
 	}
 
@@ -862,12 +797,11 @@ pax_aslr_setup_flags(struct image_params *imgp, uint32_t mode)
 			flags |= PAX_NOTE_ASLR;
 			flags &= ~PAX_NOTE_NOASLR;
 		}
-
 		return (flags);
 	}
 
 	/*
-	 * unknown status, force ASLR
+	 * Unknown status, force ASLR.
 	 */
 	flags |= PAX_NOTE_ASLR;
 	flags &= ~PAX_NOTE_NOASLR;

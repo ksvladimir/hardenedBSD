@@ -1051,7 +1051,9 @@ exec_new_vmspace(imgp, sv)
 	}
 
 #ifdef PAX_ASLR
+	PROC_LOCK(imgp->proc);
 	pax_aslr_init(imgp);
+	PROC_UNLOCK(imgp->proc);
 #endif
 
 	/* Map a shared page */
@@ -1392,13 +1394,23 @@ exec_check_aslr(struct image_params *imgp)
 	struct proc *p = imgp->proc;
 	struct ucred *oldcred = p->p_ucred;
 	struct vattr *attr = imgp->attr;
-	int error, credential_changing;
+	int credential_changing;
+#ifdef MAC
+	struct label *interpvplabel = NULL;
+	int will_transition;
+#endif
 
 	credential_changing = 0;
 	credential_changing |= (attr->va_mode & S_ISUID) && oldcred->cr_uid !=
 	    attr->va_uid;
 	credential_changing |= (attr->va_mode & S_ISGID) && oldcred->cr_gid !=
 	    attr->va_gid;
+
+#ifdef MAC
+	will_transition = mac_vnode_execve_will_transition(oldcred, imgp->vp,
+	    interpvplabel, imgp);
+	credential_changing |= will_transition;
+#endif
 
 	if (credential_changing) {
 		if ((p->p_paxdebug & PAX_NOTE_NOASLR) == PAX_NOTE_NOASLR) {
@@ -1407,8 +1419,7 @@ exec_check_aslr(struct image_params *imgp)
 		}
 	}
 
-	error = pax_elf(imgp, p->p_paxdebug);
-	return (error);
+	return (pax_elf(imgp, p->p_paxdebug));
 }
 #endif /* PAX_ASLR */
 
@@ -1435,9 +1446,13 @@ exec_check_permissions(imgp)
 		return (error);
 
 #if defined(PAX_ASLR)
+	PROC_LOCK(imgp->proc);
 	error = exec_check_aslr(imgp);
-	if (error)
+	if (error) {
+		PROC_UNLOCK(imgp->proc);
 		return (error);
+	}
+	PROC_UNLOCK(imgp->proc);
 #endif
 
 #ifdef MAC

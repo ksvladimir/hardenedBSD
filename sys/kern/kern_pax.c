@@ -32,7 +32,6 @@
  * HardenedBSD-version: v16
  *
  */
-
 #include <sys/cdefs.h>
 __FBSDID("$FreeBSD$");
 
@@ -57,21 +56,16 @@ __FBSDID("$FreeBSD$");
 #include <sys/queue.h>
 #include <sys/libkern.h>
 #include <sys/jail.h>
-
 #include <sys/mman.h>
 #include <sys/libkern.h>
 #include <sys/exec.h>
 #include <sys/kthread.h>
-
 #include <sys/syslimits.h>
 #include <sys/param.h>
-
 #include <vm/pmap.h>
 #include <vm/vm_map.h>
 #include <vm/vm_extern.h>
-
 #include <machine/elf.h>
-
 #include <sys/pax.h>
 
 static int pax_validate_flags(uint32_t flags);
@@ -97,20 +91,27 @@ struct prison *
 pax_get_prison(struct proc *p)
 {
 
-	/* p can be NULL with kernel threads, so use prison0 */
+	/* p can be NULL with kernel threads, so use prison0. */
 	if (p == NULL || p->p_ucred == NULL)
 		return (&prison0);
+
+	PROC_LOCK_ASSERT(p, MA_OWNED);
 
 	return (p->p_ucred->cr_prison);
 }
 
+/*
+* As it stands right now, only the sysctl(8)s controlling ASLR use
+* pax_get_prison_td. Thus this function requires td being equal to
+* curthread.
+*/
 struct prison *
 pax_get_prison_td(struct thread *td)
 {
 
+	KASSERT(td == curthread, ("pax_get_prison_td: td != curthread"));
 	if (td == NULL || td->td_ucred == NULL)
 		return (&prison0);
-
 	return (td->td_ucred->cr_prison);
 }
 
@@ -134,7 +135,6 @@ pax_validate_flags(uint32_t flags)
 
 	if ((flags & ~PAX_NOTE_ALL) != 0)
 		return (1);
-
 	return (0);
 }
 
@@ -144,7 +144,6 @@ pax_check_conflicting_modes(uint32_t mode)
 
 	if (((mode & PAX_NOTE_ALL_ENABLED) & ((mode & PAX_NOTE_ALL_DISABLED) >> 1)) != 0)
 		return (1);
-
 	return (0);
 }
 
@@ -155,37 +154,32 @@ pax_elf(struct image_params *imgp, uint32_t mode)
 
 	flags = mode;
 	flags_aslr = 0;
-
 	if (pax_validate_flags(flags) != 0) {
 		printf("%s: unknown paxflags: %x\n", __func__, flags);
 		return (ENOEXEC);
 	}
-
 	if (pax_check_conflicting_modes(mode) != 0) {
 		/*
-		 * indicate flags inconsistencies in dmesg and in user terminal
+		 * Indicate flags inconsistencies in dmesg and in
+		 * user terminal.
 		 */
-		printf("%s: inconsistent paxflags: %x\n", __func__, flags);
+		printf("%s: inconsistent paxflags: %x\n", __func__,
+		    flags);
 		return (ENOEXEC);
 	}
-
 #ifdef PAX_ASLR
 	flags_aslr = pax_aslr_setup_flags(imgp, mode);
 #endif
-
 	flags = flags_aslr;
-
 	CTR3(KTR_PAX, "%s : flags = %x mode = %x",
 	    __func__, flags, mode);
-
 	imgp->proc->p_pax = flags;
-
 	return (0);
 }
 
 
 /*
- * print out PaX settings on boot time, and validate some of them
+ * Print out PaX settings on boot time, and validate some of them.
  */
 static void
 pax_sysinit(void)

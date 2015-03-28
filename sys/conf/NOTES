@@ -2978,7 +2978,7 @@ options 	RANDOM_DEBUG	# Debugging messages
 # Module to enable execution of application via emulators like QEMU
 options         IMAGACT_BINMISC
 
-# Address Space Layout Randomization (ASLR)
+# PaX-inspired exploit mitigations
 options		PAX_ASLR	# Address Space Layout Randomization
 options		PAX_SYSCTLS	# Run-time settings for PAX and Hardening
 # zlib I/O stream support

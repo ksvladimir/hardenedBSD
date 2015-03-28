@@ -33,19 +33,19 @@
  *
  */
 
-#ifndef	__SYS_PAX_H
-#define	__SYS_PAX_H
+#ifndef _SYS_PAX_H
+#define	_SYS_PAX_H
 
 #if defined(_KERNEL) || defined(_WANT_PRISON)
 struct hardening_features {
-	int	 hr_pax_aslr_status;		/* (p) PaX ASLR enabled */
-	int	 hr_pax_aslr_mmap_len;		/* (p) Number of bits randomized with mmap */
-	int	 hr_pax_aslr_stack_len;		/* (p) Number of bits randomized with stack */
-	int	 hr_pax_aslr_exec_len;		/* (p) Number of bits randomized with the execbase */
-	int	 hr_pax_aslr_compat_status;	/* (p) PaX ASLR enabled (compat32) */
-	int	 hr_pax_aslr_compat_mmap_len;	/* (p) Number of bits randomized with mmap (compat32) */
-	int	 hr_pax_aslr_compat_stack_len;	/* (p) Number of bits randomized with stack (compat32) */
-	int	 hr_pax_aslr_compat_exec_len;	/* (p) Number of bits randomized with the execbase (compat32) */
+	int	 hf_pax_aslr_status;		/* (p) PaX ASLR enabled */
+	int	 hf_pax_aslr_mmap_len;		/* (p) Number of bits randomized with mmap */
+	int	 hf_pax_aslr_stack_len;		/* (p) Number of bits randomized with stack */
+	int	 hf_pax_aslr_exec_len;		/* (p) Number of bits randomized with the execbase */
+	int	 hf_pax_aslr_compat_status;	/* (p) PaX ASLR enabled (compat32) */
+	int	 hf_pax_aslr_compat_mmap_len;	/* (p) Number of bits randomized with mmap (compat32) */
+	int	 hf_pax_aslr_compat_stack_len;	/* (p) Number of bits randomized with stack (compat32) */
+	int	 hf_pax_aslr_compat_exec_len;	/* (p) Number of bits randomized with the execbase (compat32) */
 };
 #endif
 
@@ -59,7 +59,7 @@ struct vnode;
 struct vm_offset_t;
 
 /*
- * used in sysctl handler
+ * Used in sysctl handlers.
  */
 #define	PAX_FEATURE_DISABLED		0
 #define	PAX_FEATURE_OPTIN		1
@@ -75,36 +75,34 @@ extern const char *pax_status_str[];
 extern const char *pax_status_simple_str[];
 
 /*
- * generic pax functions
+ * Generic pax functions.
  */
 int pax_elf(struct image_params *, uint32_t);
-void pax_get_flags(struct proc *p, uint32_t *flags);
-void pax_get_flags_td(struct thread *td, uint32_t *flags);
-struct prison *pax_get_prison(struct proc *p);
-struct prison *pax_get_prison_td(struct thread *td);
-void pax_init_prison(struct prison *pr);
+void pax_get_flags(struct proc *, uint32_t *);
+void pax_get_flags_td(struct thread *, uint32_t *);
+struct prison *pax_get_prison(struct proc *);
+struct prison *pax_get_prison_td(struct thread *);
+void pax_init_prison(struct prison *);
 
 /*
- * ASLR related functions
+ * ASLR related functions.
  */
-int pax_aslr_active(struct proc *p);
-
-void pax_aslr_init_vmspace(struct proc *p);
-void pax_aslr_init_vmspace32(struct proc *p);
-void pax_aslr_init_prison(struct prison *pr);
-void pax_aslr_init_prison32(struct prison *pr);
-void pax_aslr_init(struct image_params *imgp);
-void pax_aslr_execbase(struct proc *p, u_long *et_dyn_addr);
-void pax_aslr_mmap(struct proc *p, vm_offset_t *addr,
-    vm_offset_t orig_addr, int flags);
-uint32_t pax_aslr_setup_flags(struct image_params *imgp, uint32_t mode);
-void pax_aslr_stack(struct proc *p, uintptr_t *addr);
-void pax_aslr_stack_fixup(struct proc *p);
+int pax_aslr_active(struct proc *);
+void pax_aslr_execbase(struct proc *, u_long *);
+void pax_aslr_init(struct image_params *);
+void pax_aslr_init_prison(struct prison *);
+void pax_aslr_init_prison32(struct prison *);
+uint32_t pax_aslr_setup_flags(struct image_params *, uint32_t);
+void pax_aslr_init_vmspace(struct proc *);
+void pax_aslr_init_vmspace32(struct proc *);
+void pax_aslr_mmap(struct proc *, vm_offset_t *, vm_offset_t, int);
+void pax_aslr_stack(struct proc *, uintptr_t *);
+void pax_aslr_stack_fixup(struct proc *);
 
 #else /* PAX_ASLR */
 
-#define pax_aslr_init_vmspace	NULL
-#define pax_aslr_init_vmspace32	NULL
+#define	pax_aslr_init_vmspace	NULL
+#define	pax_aslr_init_vmspace32	NULL
 #define	pax_aslr_init_prison(pr)	do {} while (0)
 #define	pax_aslr_init_prison32(pr)	do {} while (0)
 
@@ -115,11 +113,9 @@ void pax_aslr_stack_fixup(struct proc *p);
  */
 #define	PAX_NOTE_ASLR		0x00000040
 #define	PAX_NOTE_NOASLR		0x00000080
-
 #define	PAX_NOTE_ALL_ENABLED	(PAX_NOTE_ASLR)
 #define	PAX_NOTE_ALL_DISABLED	(PAX_NOTE_NOASLR)
 #define	PAX_NOTE_ALL	(PAX_NOTE_ALL_ENABLED | PAX_NOTE_ALL_DISABLED)
 
 #endif /* _KERNEL */
-
 #endif /* __SYS_PAX_H */

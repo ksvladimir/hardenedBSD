@@ -248,7 +248,6 @@ prison0_init(void)
 	prison0.pr_cpuset = cpuset_ref(thread0.td_cpuset);
 	prison0.pr_osreldate = osreldate;
 	strlcpy(prison0.pr_osrelease, osrelease, sizeof(prison0.pr_osrelease));
-
 #ifdef PAX_ASLR
 	pax_init_prison(&prison0);
 #endif
@@ -1363,11 +1362,9 @@ kern_jail_set(struct thread *td, struct uio *optuio, int flags)
 			prison_deref(pr, PD_LIST_XLOCKED);
 			goto done_releroot;
 		}
-
 #ifdef PAX_ASLR
 		pax_init_prison(pr);
 #endif
-
 		mtx_lock(&pr->pr_mtx);
 		/*
 		 * New prisons do not yet have a reference, because we do not
