@@ -38,6 +38,22 @@
 #   xargs -n1 | sort | uniq -d;
 # done
 
+# 20150410
+OLD_FILES+=usr/share/doc/usd/10.exref/paper.ascii.gz
+OLD_FILES+=usr/share/doc/usd/10.exref/summary.ascii.gz
+OLD_DIRS+=usr/share/doc/usd/10.exref
+OLD_FILES+=usr/share/doc/usd/11.edit/paper.ascii.gz
+OLD_DIRS+=usr/share/doc/usd/11.edit
+OLD_FILES+=usr/share/doc/usd/12.vi/paper.ascii.gz
+OLD_FILES+=usr/share/doc/usd/12.vi/summary.ascii.gz
+OLD_FILES+=usr/share/doc/usd/12.vi/viapwh.ascii.gz
+OLD_DIRS+=usr/share/doc/usd/12.vi
+OLD_FILES+=usr/share/doc/usd/13.viref/paper.ascii.gz
+OLD_DIRS+=usr/share/doc/usd/13.viref
+# 20150329
+.if ${TARGET_ARCH} == "arm"
+OLD_FILES+=usr/include/bootconfig.h
+.endif
 # 20150326
 OLD_FILES+=usr/share/man/man1/pmcstudy.1.gz
 # 20150315: new clang import which bumps version from 3.5.1 to 3.6.0.
