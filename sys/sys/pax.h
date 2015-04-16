@@ -75,7 +75,7 @@ extern const char *pax_status_str[];
 extern const char *pax_status_simple_str[];
 
 /*
- * Generic pax functions.
+ * Generic PaX functions.
  */
 int pax_elf(struct image_params *, uint32_t);
 void pax_get_flags(struct proc *, uint32_t *);
@@ -118,4 +118,4 @@ void pax_aslr_stack_fixup(struct proc *);
 #define	PAX_NOTE_ALL	(PAX_NOTE_ALL_ENABLED | PAX_NOTE_ALL_DISABLED)
 
 #endif /* _KERNEL */
-#endif /* __SYS_PAX_H */
+#endif /* _SYS_PAX_H */

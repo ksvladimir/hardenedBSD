@@ -40,25 +40,24 @@ __FBSDID("$FreeBSD$");
 
 #include <sys/param.h>
 #include <sys/systm.h>
-#include <sys/kernel.h>
-#include <sys/ktr.h>
+#include <sys/elf_common.h>
+#include <sys/exec.h>
 #include <sys/imgact.h>
 #include <sys/imgact_elf.h>
-#include <sys/sysent.h>
-#include <sys/stat.h>
-#include <sys/proc.h>
-#include <sys/elf_common.h>
+#include <sys/jail.h>
+#include <sys/kernel.h>
+#include <sys/kthread.h>
+#include <sys/ktr.h>
+#include <sys/libkern.h>
+#include <sys/mman.h>
 #include <sys/mount.h>
 #include <sys/pax.h>
+#include <sys/proc.h>
+#include <sys/queue.h>
+#include <sys/stat.h>
+#include <sys/sysent.h>
 #include <sys/sysctl.h>
 #include <sys/vnode.h>
-#include <sys/queue.h>
-#include <sys/libkern.h>
-#include <sys/jail.h>
-#include <sys/mman.h>
-#include <sys/libkern.h>
-#include <sys/exec.h>
-#include <sys/kthread.h>
 #include <vm/pmap.h>
 #include <vm/vm_map.h>
 #include <vm/vm_extern.h>
@@ -511,7 +510,7 @@ pax_aslr_sysinit(void)
 		printf("PAX ASLR stack: %d bit\n", pax_aslr_stack_len);
 	}
 }
-SYSINIT(pax_aslr, SI_SUB_PAX, SI_ORDER_SECOND, pax_aslr_sysinit, NULL);
+SYSINIT(pax_aslr, SI_SUB_PAX, SI_ORDER_FIRST, pax_aslr_sysinit, NULL);
 
 int
 pax_aslr_active(struct proc *p)
@@ -747,13 +746,12 @@ pax_aslr_stack_fixup(struct proc *p)
 }
 
 void
-pax_aslr_execbase(struct proc *p, u_long *et_dyn_addr)
+pax_aslr_execbase(struct proc *p, u_long *et_dyn_addrp)
 {
 
 	if (!pax_aslr_active(p))
 		return;
-
-	*et_dyn_addr += p->p_vmspace->vm_aslr_delta_exec;
+	*et_dyn_addrp += p->p_vmspace->vm_aslr_delta_exec;
 }
 
 uint32_t
@@ -788,7 +786,6 @@ pax_aslr_setup_flags(struct image_params *imgp, uint32_t mode)
 		}
 		return (flags);
 	}
-
 	if (status == PAX_FEATURE_OPTOUT) {
 		if (mode & PAX_NOTE_NOASLR) {
 			flags &= ~PAX_NOTE_ASLR;
@@ -801,11 +798,10 @@ pax_aslr_setup_flags(struct image_params *imgp, uint32_t mode)
 	}
 
 	/*
-	 * Unknown status, force ASLR.
+	 * flags is in an unknown state, so force ASLR.
 	 */
 	flags |= PAX_NOTE_ASLR;
 	flags &= ~PAX_NOTE_NOASLR;
-
 	return (flags);
 }
 

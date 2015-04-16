@@ -41,32 +41,30 @@ __FBSDID("$FreeBSD$");
 #include <sys/param.h>
 #include <sys/systm.h>
 #include <sys/kernel.h>
+#include <sys/elf_common.h>
+#include <sys/exec.h>
 #include <sys/imgact.h>
 #include <sys/imgact_elf.h>
-#include <sys/lock.h>
-#include <sys/mutex.h>
-#include <sys/sx.h>
-#include <sys/sysent.h>
-#include <sys/stat.h>
-#include <sys/proc.h>
-#include <sys/elf_common.h>
-#include <sys/mount.h>
-#include <sys/sysctl.h>
-#include <sys/vnode.h>
-#include <sys/queue.h>
-#include <sys/libkern.h>
 #include <sys/jail.h>
-#include <sys/mman.h>
-#include <sys/libkern.h>
-#include <sys/exec.h>
 #include <sys/kthread.h>
+#include <sys/libkern.h>
+#include <sys/lock.h>
+#include <sys/mman.h>
+#include <sys/mount.h>
+#include <sys/mutex.h>
+#include <sys/pax.h>
+#include <sys/proc.h>
+#include <sys/queue.h>
+#include <sys/stat.h>
+#include <sys/sysctl.h>
+#include <sys/sysent.h>
 #include <sys/syslimits.h>
-#include <sys/param.h>
+#include <sys/sx.h>
+#include <sys/vnode.h>
 #include <vm/pmap.h>
 #include <vm/vm_map.h>
 #include <vm/vm_extern.h>
 #include <machine/elf.h>
-#include <sys/pax.h>
 
 static int pax_validate_flags(uint32_t flags);
 static int pax_check_conflicting_modes(uint32_t mode);
@@ -154,19 +152,10 @@ pax_elf(struct image_params *imgp, uint32_t mode)
 
 	flags = mode;
 	flags_aslr = 0;
-	if (pax_validate_flags(flags) != 0) {
-		printf("%s: unknown paxflags: %x\n", __func__, flags);
+	if (pax_validate_flags(flags) != 0)
 		return (ENOEXEC);
-	}
-	if (pax_check_conflicting_modes(mode) != 0) {
-		/*
-		 * Indicate flags inconsistencies in dmesg and in
-		 * user terminal.
-		 */
-		printf("%s: inconsistent paxflags: %x\n", __func__,
-		    flags);
+	if (pax_check_conflicting_modes(mode) != 0)
 		return (ENOEXEC);
-	}
 #ifdef PAX_ASLR
 	flags_aslr = pax_aslr_setup_flags(imgp, mode);
 #endif
@@ -176,18 +165,6 @@ pax_elf(struct image_params *imgp, uint32_t mode)
 	imgp->proc->p_pax = flags;
 	return (0);
 }
-
-
-/*
- * Print out PaX settings on boot time, and validate some of them.
- */
-static void
-pax_sysinit(void)
-{
-	if (bootverbose)
-		printf("pax: initialize and check PaX and HardeneBSD features.\n");
-}
-SYSINIT(pax, SI_SUB_PAX, SI_ORDER_FIRST, pax_sysinit, NULL);
 
 void
 pax_init_prison(struct prison *pr)

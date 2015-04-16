@@ -1436,7 +1436,6 @@ exec_check_aslr(struct image_params *imgp)
 }
 #endif /* PAX_ASLR */
 
-
 /*
  * Check permissions of file to execute.
  *	Called with imgp->vp locked.
